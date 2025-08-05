@@ -8,7 +8,6 @@ from transformer_net import TransformerNet
 
 app = Flask(__name__)
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-loaded_models = {}
 
 def preprocess(image_bytes):
     image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
@@ -40,19 +39,23 @@ def stylize():
     if not os.path.exists(model_path):
         return f"Model '{style_name}.pth' not found.", 404
 
-    if style_name not in loaded_models:
-        model = TransformerNet()
-        model.load_state_dict(torch.load(model_path, map_location=device))
-        model.to(device).eval()
-        loaded_models[style_name] = model
-    else:
-        model = loaded_models[style_name]
+    # Load model on-demand
+    model = TransformerNet()
+    model.load_state_dict(torch.load(model_path, map_location=device))
+    model.to(device).eval()
 
+    # Preprocess image
     input_tensor = preprocess(request.files["image"].read())
 
+    # Inference with no_grad and memory safety
     with torch.no_grad():
         output_tensor = model(input_tensor)
 
+    # Clean up model from memory
+    del model
+    torch.cuda.empty_cache()
+
+    # Postprocess and return image
     output_image = postprocess(output_tensor)
     buf = io.BytesIO()
     output_image.save(buf, format="JPEG")
