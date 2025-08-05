@@ -1,6 +1,3 @@
-# Save transformer_net.py content
-with open("transformer_net.py", "w") as f:
-    f.write('''
 import torch
 from torch import nn
 
@@ -49,7 +46,6 @@ class UpsampleConvLayer(nn.Module):
 class TransformerNet(nn.Module):
     def __init__(self):
         super(TransformerNet, self).__init__()
-        # Initial convolution layers
         self.conv1 = ConvLayer(3, 32, kernel_size=9, stride=1)
         self.in1 = nn.InstanceNorm2d(32, affine=True, track_running_stats=True)
         self.conv2 = ConvLayer(32, 64, kernel_size=3, stride=2)
@@ -57,14 +53,12 @@ class TransformerNet(nn.Module):
         self.conv3 = ConvLayer(64, 128, kernel_size=3, stride=2)
         self.in3 = nn.InstanceNorm2d(128, affine=True, track_running_stats=True)
 
-        # Residual layers
         self.res1 = ResidualBlock(128)
         self.res2 = ResidualBlock(128)
         self.res3 = ResidualBlock(128)
         self.res4 = ResidualBlock(128)
         self.res5 = ResidualBlock(128)
 
-        # Upsampling Layers
         self.deconv1 = UpsampleConvLayer(128, 64, kernel_size=3, stride=1, upsample=2)
         self.in4 = nn.InstanceNorm2d(64, affine=True, track_running_stats=True)
         self.deconv2 = UpsampleConvLayer(64, 32, kernel_size=3, stride=1, upsample=2)
@@ -86,4 +80,3 @@ class TransformerNet(nn.Module):
         y = self.relu(self.in5(self.deconv2(y)))
         y = self.deconv3(y)
         return y
-''')
